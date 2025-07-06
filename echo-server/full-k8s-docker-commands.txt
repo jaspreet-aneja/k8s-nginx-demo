@@ -1,0 +1,111 @@
+
+========================
+Docker + Node Setup (Before Kubernetes)
+========================
+
+# Build Node.js Docker image
+docker build -t node-app .
+
+# Run Node.js container
+docker run -d -p 8080:3000 node-app
+
+# Test Node.js app
+curl http://localhost:8080
+
+# List Docker containers
+docker ps
+
+# View Docker image history
+docker history node-app
+
+# List all Docker images
+docker image ls --all
+
+========================
+Kubernetes Kind Cluster Setup
+========================
+
+# Delete old cluster
+kind delete cluster --name dev-cluster
+
+# Create new cluster with port mappings
+kind create cluster --name dev-cluster --config kind-config.yaml
+
+# kind-config.yaml content:
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+      - containerPort: 31000
+        hostPort: 31000
+        protocol: TCP
+
+# Verify cluster and context
+kubectl cluster-info --context kind-dev-cluster
+kubectl version --client
+
+========================
+Kubernetes Deployments
+========================
+
+# Apply NGINX deployment and service
+kubectl apply -f nginx/
+
+# Apply Echo Server deployment and service
+kubectl apply -f echo-server/
+
+# Delete all deployed resources (cleanup)
+kubectl delete all --all
+
+# Scale NGINX deployment
+kubectl scale deployment nginx-deployment --replicas=3
+
+========================
+Cluster Status & Debugging
+========================
+
+# View all Kubernetes resources
+kubectl get all
+
+# Describe echo pods for debug info
+kubectl describe pod -l app=echo
+
+# View logs for a specific pod
+kubectl logs <pod-name>
+
+========================
+Test Services (from WSL)
+========================
+
+curl http://localhost:30080       # NGINX test
+curl http://localhost:31000       # Echo server test
+
+========================
+Test Services (from Windows)
+========================
+
+Open in browser:
+http://localhost:30080      # NGINX
+http://localhost:31000      # Echo Server (check hostname rotation for load balancing)
+
+========================
+Git Configuration & Workflow
+========================
+
+# Configure Git identity
+git config --global user.name "Your Name"
+git config --global user.email "your@email.com"
+
+# Add and commit Echo Server
+git add echo-server/
+git commit -m "Add echo-server for load balancing demo"
+git push
+
+# Initial NGINX commit (if applicable)
+git add nginx/
+git commit -m "Initial setup - nginx"
+git push
